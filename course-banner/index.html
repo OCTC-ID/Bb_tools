@@ -162,6 +162,9 @@
       <button type="button" class="pick" id="style-collegiate" aria-pressed="true"><img id="sthumb-collegiate" alt=""><span>Collegiate</span></button>
       <button type="button" class="pick" id="style-varsity" aria-pressed="false"><img id="sthumb-varsity" alt=""><span>Varsity</span></button>
       <button type="button" class="pick" id="style-minimal" aria-pressed="false"><img id="sthumb-minimal" alt=""><span>Minimal</span></button>
+      <button type="button" class="pick" id="style-plate" aria-pressed="false"><img id="sthumb-plate" alt=""><span>Plate</span></button>
+      <button type="button" class="pick" id="style-band" aria-pressed="false"><img id="sthumb-band" alt=""><span>Band</span></button>
+      <button type="button" class="pick" id="style-label" aria-pressed="false"><img id="sthumb-label" alt=""><span>Label</span></button>
     </div>
   </section>
 
@@ -212,7 +215,7 @@
 (function () {
   var NAVY = '#0F2347', GOLD = '#E9B425', WHITE = '#FFFFFF';
   var W = 1200, H = 240; // Blackboard's 5:1 course banner
-  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal'];
+  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal', 'plate', 'band', 'label'];
   // bg: field, ink: title, trim: rules and ornaments, thin: the fine second stripe, sub: subtitle
   var COLORS = {
     navy: { bg: NAVY, ink: WHITE, trim: GOLD, thin: WHITE, sub: GOLD },
@@ -228,9 +231,9 @@
     return { title: t, sub: s };
   }
 
-  // Draws one centered line, shrinking to fit o.max. Returns its left and right edges.
+  // Finds the largest size (up to o.size) at which str fits o.max. Returns that size and the text width.
   // o: y, size, max, family, weight, color, ls (letter spacing, em)
-  function centered(ctx, str, o) {
+  function fit(ctx, str, o) {
     var s = o.size, w;
     for (;;) {
       if ('letterSpacing' in ctx) ctx.letterSpacing = (s * (o.ls || 0)) + 'px';
@@ -239,13 +242,22 @@
       if (w <= o.max || s <= 14) break;
       s -= 1;
     }
-    // Letter spacing adds a trailing gap after the last letter; shift so the glyphs sit centered.
+    // Letter spacing adds a trailing gap after the last letter; leave it out so the glyphs sit centered.
     var trail = ('letterSpacing' in ctx) ? s * (o.ls || 0) : 0;
-    var left = W / 2 - (w - trail) / 2;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    return { size: s, w: w - trail };
+  }
+
+  // Draws one centered line, shrinking to fit o.max. Returns its left and right edges.
+  function centered(ctx, str, o) {
+    var f = fit(ctx, str, o);
+    var left = W / 2 - f.w / 2;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = (f.size * (o.ls || 0)) + 'px';
+    ctx.font = o.weight + ' ' + f.size + 'px ' + o.family;
     ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillStyle = o.color;
     ctx.fillText(str, left, o.y);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-    return { left: left, right: left + w - trail };
+    return { left: left, right: left + f.w };
   }
 
   function line(ctx, x1, y, x2, w, color) { ctx.fillStyle = color; ctx.fillRect(x1, y - w / 2, x2 - x1, w); }
@@ -297,6 +309,36 @@
       centered(ctx, t.title, { y: y, size: 88, max: 820, family: SOURCE, weight: 700, color: c.ink, ls: 0.02 });
       ctx.fillStyle = c.trim; ctx.fillRect(W / 2 - 48, y + 56, 96, 6);
       if (t.sub) centered(ctx, t.sub, { y: 192, size: 30, max: 760, family: SOURCE, weight: 400, color: c.ink, ls: 0.06 });
+    },
+    // A white plate with a border, centered on the field. Text is navy in both color schemes.
+    plate: function (ctx, c, t) {
+      var to = { y: t.sub ? 100 : 122, size: t.sub ? 96 : 112, max: 680, family: BARLOW, weight: 800, color: NAVY, ls: 0.04 };
+      var so = { y: 168, size: 32, max: 680, family: BARLOW, weight: 500, color: NAVY, ls: 0.16 };
+      var widest = Math.max(fit(ctx, t.title, to).w, t.sub ? fit(ctx, t.sub, so).w : 0);
+      var pw = Math.min(820, Math.max(360, widest + 140));
+      ctx.fillStyle = WHITE; ctx.fillRect(W / 2 - pw / 2, 34, pw, 172);
+      ctx.strokeStyle = c.trim; ctx.lineWidth = 6; ctx.strokeRect(W / 2 - pw / 2, 34, pw, 172);
+      centered(ctx, t.title, to);
+      if (t.sub) centered(ctx, t.sub, so);
+    },
+    // The title sits in a contrasting band that runs the full width.
+    band: function (ctx, c, t) {
+      var top = t.sub ? 52 : 68;
+      ctx.fillStyle = c.trim; ctx.fillRect(0, top, W, 104);
+      centered(ctx, t.title, { y: top + 55, size: 92, max: 820, family: BARLOW, weight: 800, color: c.bg === GOLD ? WHITE : c.bg, ls: 0.04 });
+      if (t.sub) centered(ctx, t.sub, { y: 196, size: 34, max: 760, family: BARLOW, weight: 500, color: c.ink, ls: 0.16 });
+    },
+    // An outlined box; the subtitle is set into its bottom edge.
+    label: function (ctx, c, t) {
+      var to = { y: t.sub ? 106 : 122, size: 82, max: 680, family: SOURCE, weight: 700, color: c.ink, ls: 0.04 };
+      var so = { y: 180, size: 27, max: 600, family: SOURCE, weight: 400, color: c.sub, ls: 0.14 };
+      var tw = fit(ctx, t.title, to).w, sw = t.sub ? fit(ctx, t.sub, so).w : 0;
+      var bw = Math.min(860, Math.max(tw, sw + 80) + 150);
+      var topY = t.sub ? 40 : 50;
+      ctx.strokeStyle = c.trim; ctx.lineWidth = 4; ctx.strokeRect(W / 2 - bw / 2, topY, bw, 140);
+      if (t.sub) { ctx.fillStyle = c.bg; ctx.fillRect(W / 2 - sw / 2 - 22, 170, sw + 44, 20); }
+      centered(ctx, t.title, to);
+      if (t.sub) centered(ctx, t.sub, so);
     }
   };
 
