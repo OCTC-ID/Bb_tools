@@ -15,13 +15,7 @@ Both tools offer the Collegiate, Varsity, and Minimal styles. The course banner 
 
 Course banners are 5:1, Blackboard's banner shape: 1200 x 240, 2400 x 480 (default), or 4800 x 960.
 
-Heading banners:
-
-| Level | 1200 px wide | 2400 px wide (default) | 4800 px wide |
-|---|---|---|---|
-| 1 | 1200 x 240 | 2400 x 480 | 4800 x 960 |
-| 2 | 1200 x 180 | 2400 x 360 | 4800 x 720 |
-| 3 | 1200 x 120 | 2400 x 240 | 4800 x 480 |
+Heading banners are 1200, 2400 (default), or 4800 px wide. Level 1 is the same 5:1 shape as a course banner. Levels 2 and 3 start at the left edge and are trimmed to the height of the heading, so they line up with, and sit close to, the text under them. Their height depends on the style; the tool shows the exact size under the preview.
 
 ## Accessibility
 
