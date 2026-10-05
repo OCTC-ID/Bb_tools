@@ -282,13 +282,14 @@
       },
       2: function (ctx, H) {
         fill(ctx, H, WHITE);
-        text(ctx, { x: 56, y: 78, size: 44, max: 1080, family: FRANKLIN, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.08 });
-        line(ctx, 56, 128, 1144, 5, NAVY); line(ctx, 56, 139, 1144, 2, GOLD);
+        text(ctx, { x: 0, y: 78, size: 44, max: 1190, family: FRANKLIN, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.08 });
+        line(ctx, 0, 128, W, 5, NAVY); line(ctx, 0, 139, W, 2, GOLD);
       },
       3: function (ctx, H) {
-        fill(ctx, H, WHITE); diamond(ctx, 68, 60, 10, GOLD);
-        var t = text(ctx, { x: 96, y: 62, size: 30, max: 1000, family: FRANKLIN, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.08 });
-        if (t.right + 50 < 1144) line(ctx, t.right + 24, 60, 1144, 1.5, NAVY);
+        fill(ctx, H, WHITE);
+        var t = text(ctx, { x: 0, y: 62, size: 30, max: 1150, family: FRANKLIN, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.08 });
+        diamond(ctx, t.right + 28, 60, 10, GOLD);
+        if (t.right + 90 < W) line(ctx, t.right + 52, 60, W, 1.5, NAVY);
       }
     },
     // Letter-sweater stripes, star seal, condensed athletic lettering.
@@ -301,14 +302,15 @@
         ring(ctx, 1070, 120, 62, 5, GOLD); ring(ctx, 1070, 120, 52, 1.5, GOLD); star(ctx, 1070, 122, 34, GOLD);
       },
       2: function (ctx, H) {
-        fill(ctx, H, WHITE); star(ctx, 82, 78, 26, GOLD);
-        text(ctx, { x: 124, y: 80, size: 70, max: 1010, family: BARLOW, bw: 800, lw: 500, bc: NAVY, lc: NAVY, ls: 0.03 });
-        line(ctx, 56, 132, 1144, 8, NAVY); line(ctx, 56, 144, 1144, 3, GOLD);
+        fill(ctx, H, WHITE);
+        var t = text(ctx, { x: 0, y: 80, size: 70, max: 1120, family: BARLOW, bw: 800, lw: 500, bc: NAVY, lc: NAVY, ls: 0.03 });
+        star(ctx, t.right + 44, 78, 24, GOLD);
+        line(ctx, 0, 132, W, 8, NAVY); line(ctx, 0, 144, W, 3, GOLD);
       },
       3: function (ctx, H) {
         fill(ctx, H, WHITE);
-        ctx.fillStyle = NAVY; ctx.fillRect(56, 34, 6, 52); ctx.fillStyle = GOLD; ctx.fillRect(66, 34, 3, 52);
-        text(ctx, { x: 88, y: 62, size: 48, max: 1050, family: BARLOW, bw: 800, lw: 500, bc: NAVY, lc: NAVY, ls: 0.03 });
+        var t = text(ctx, { x: 0, y: 52, size: 48, max: 1190, family: BARLOW, bw: 800, lw: 500, bc: NAVY, lc: NAVY, ls: 0.03 });
+        line(ctx, 0, 90, t.right, 6, NAVY); line(ctx, 0, 100, t.right, 3, GOLD);
       }
     },
     // Type and one short gold bar.
@@ -320,13 +322,13 @@
       },
       2: function (ctx, H) {
         fill(ctx, H, WHITE);
-        text(ctx, { x: 56, y: 76, size: 54, max: 1080, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
-        ctx.fillStyle = GOLD; ctx.fillRect(56, 124, 96, 6);
+        text(ctx, { x: 0, y: 76, size: 54, max: 1190, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
+        ctx.fillStyle = GOLD; ctx.fillRect(0, 124, 96, 6);
       },
       3: function (ctx, H) {
         fill(ctx, H, WHITE);
-        text(ctx, { x: 56, y: 54, size: 38, max: 1080, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
-        line(ctx, 56, 92, 1144, 2, RULE); line(ctx, 56, 92, 104, 2, GOLD);
+        text(ctx, { x: 0, y: 54, size: 38, max: 1190, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
+        line(ctx, 0, 92, W, 2, RULE); line(ctx, 0, 92, 48, 2, GOLD);
       }
     }
   };
