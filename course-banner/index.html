@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Course Banner Maker | OCTC Bb Tools</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;800&family=Libre+Franklin:wght@400;500;700;800&family=Source+Sans+3:wght@300;400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;800&family=Comic+Neue:wght@400;700&family=Libre+Franklin:wght@400;500;700;800&family=Source+Sans+3:wght@300;400;700&display=swap">
 <style>
   /* Layout: the banner being made sits on top at full width; style and level
      pickers below it are live thumbnails; text and export controls follow. */
@@ -131,6 +131,8 @@
   .tool em { font-style: normal; font-weight: 700; text-decoration: underline; }
   footer { font-size: 14px; color: var(--muted); padding-top: 16px; border-top: 1px solid var(--line); }
   @media (max-width: 620px) { .picks.two, .tools { grid-template-columns: minmax(0, 1fr); } }
+  .picks.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 760px) { .picks.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
@@ -158,13 +160,14 @@
 
   <section>
     <h2>Style</h2>
-    <div class="picks">
+    <div class="picks four">
       <button type="button" class="pick" id="style-collegiate" aria-pressed="true"><img id="sthumb-collegiate" alt=""><span>Collegiate</span></button>
       <button type="button" class="pick" id="style-varsity" aria-pressed="false"><img id="sthumb-varsity" alt=""><span>Varsity</span></button>
       <button type="button" class="pick" id="style-minimal" aria-pressed="false"><img id="sthumb-minimal" alt=""><span>Minimal</span></button>
       <button type="button" class="pick" id="style-plate" aria-pressed="false"><img id="sthumb-plate" alt=""><span>Plate</span></button>
       <button type="button" class="pick" id="style-band" aria-pressed="false"><img id="sthumb-band" alt=""><span>Band</span></button>
       <button type="button" class="pick" id="style-label" aria-pressed="false"><img id="sthumb-label" alt=""><span>Label</span></button>
+      <button type="button" class="pick" id="style-playful" aria-pressed="false"><img id="sthumb-playful" alt=""><span>Playful</span></button>
     </div>
   </section>
 
@@ -215,7 +218,7 @@
 (function () {
   var NAVY = '#0F2347', GOLD = '#E9B425', WHITE = '#FFFFFF';
   var W = 1200, H = 240; // Blackboard's 5:1 course banner
-  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal', 'plate', 'band', 'label'];
+  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal', 'plate', 'band', 'label', 'playful'];
   // bg: field, ink: title, trim: rules and ornaments, thin: the fine second stripe, sub: subtitle
   var COLORS = {
     navy: { bg: NAVY, ink: WHITE, trim: GOLD, thin: WHITE, sub: GOLD },
@@ -275,6 +278,18 @@
     ctx.closePath(); ctx.fill();
   }
 
+  // A hand-drawn-looking wavy line from x1 to x2.
+  function wave(ctx, x1, x2, y, amp, len, w, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y);
+    var n = Math.max(2, Math.round((x2 - x1) / (len / 2))), step = (x2 - x1) / n;
+    for (var i = 0; i < n; i++) {
+      ctx.quadraticCurveTo(x1 + step * (i + 0.5), y + (i % 2 ? amp : -amp) * 2, x1 + step * (i + 1), y);
+    }
+    ctx.stroke(); ctx.lineCap = 'butt';
+  }
+
+  var COMIC = '"Comic Neue", "Comic Sans MS", "Chalkboard SE", sans-serif';
   var FRANKLIN = '"Libre Franklin", "Segoe UI", Arial, sans-serif';
   var BARLOW = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
   var SOURCE = '"Source Sans 3", "Segoe UI", Arial, sans-serif';
@@ -339,6 +354,13 @@
       if (t.sub) { ctx.fillStyle = c.bg; ctx.fillRect(W / 2 - sw / 2 - 22, 170, sw + 44, 20); }
       centered(ctx, t.title, to);
       if (t.sub) centered(ctx, t.sub, so);
+    },
+    // Rounded, friendly lettering with a wavy underline.
+    playful: function (ctx, c, t) {
+      var y = t.sub ? 88 : 104;
+      var m = centered(ctx, t.title, { y: y, size: 86, max: 820, family: COMIC, weight: 700, color: c.ink, ls: 0.01 });
+      wave(ctx, m.left + 2, m.right - 2, y + 58, 5, 44, 7, c.bg === GOLD ? WHITE : c.trim);
+      if (t.sub) centered(ctx, t.sub, { y: 194, size: 32, max: 760, family: COMIC, weight: 700, color: c.sub, ls: 0.04 });
     }
   };
 
@@ -421,6 +443,7 @@
   refresh();
   if (document.fonts && document.fonts.load) {
     Promise.all([
+      document.fonts.load('700 40px "Comic Neue"'), document.fonts.load('400 40px "Comic Neue"'),
       document.fonts.load('700 40px "Libre Franklin"'), document.fonts.load('500 40px "Libre Franklin"'),
       document.fonts.load('800 40px "Barlow Condensed"'), document.fonts.load('500 40px "Barlow Condensed"'),
       document.fonts.load('700 40px "Source Sans 3"'), document.fonts.load('400 40px "Source Sans 3"')

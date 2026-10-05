@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Heading Banner Maker | OCTC Bb Tools</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;800&family=Libre+Franklin:wght@400;500;700;800&family=Source+Sans+3:wght@300;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;800&family=Comic+Neue:wght@400;700&family=Libre+Franklin:wght@400;500;700;800&family=Source+Sans+3:wght@300;700&display=swap">
 <style>
   /* Layout: the banner being made sits on top at full width; style and level
      pickers below it are live thumbnails; text and export controls follow. */
@@ -131,6 +131,8 @@
   .tool em { font-style: normal; font-weight: 700; text-decoration: underline; }
   footer { font-size: 14px; color: var(--muted); padding-top: 16px; border-top: 1px solid var(--line); }
   @media (max-width: 620px) { .picks.two, .tools { grid-template-columns: minmax(0, 1fr); } }
+  .picks.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 760px) { .picks.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
@@ -150,10 +152,11 @@
 
   <section>
     <h2>Style</h2>
-    <div class="picks">
+    <div class="picks four">
       <button type="button" class="pick" id="style-collegiate" aria-pressed="true"><img id="sthumb-collegiate" alt=""><span>Collegiate</span></button>
       <button type="button" class="pick" id="style-varsity" aria-pressed="false"><img id="sthumb-varsity" alt=""><span>Varsity</span></button>
       <button type="button" class="pick" id="style-minimal" aria-pressed="false"><img id="sthumb-minimal" alt=""><span>Minimal</span></button>
+      <button type="button" class="pick" id="style-playful" aria-pressed="false"><img id="sthumb-playful" alt=""><span>Playful</span></button>
     </div>
   </section>
 
@@ -217,10 +220,11 @@
   var HEIGHTS = {
     collegiate: { 1: 240, 2: 86, 3: 36 },
     varsity: { 1: 240, 2: 106, 3: 79 },
-    minimal: { 1: 240, 2: 88, 3: 62 }
+    minimal: { 1: 240, 2: 88, 3: 62 },
+    playful: { 1: 240, 2: 92, 3: 66 }
   };
   var W = 1200;
-  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal'];
+  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal', 'playful'];
 
   var state = { style: 'collegiate', level: 1 };
   var el = function (id) { return document.getElementById(id); };
@@ -272,6 +276,18 @@
   }
   function ring(ctx, x, y, r, w, color) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); }
 
+  // A hand-drawn-looking wavy line from x1 to x2.
+  function wave(ctx, x1, x2, y, amp, len, w, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y);
+    var n = Math.max(2, Math.round((x2 - x1) / (len / 2))), step = (x2 - x1) / n;
+    for (var i = 0; i < n; i++) {
+      ctx.quadraticCurveTo(x1 + step * (i + 0.5), y + (i % 2 ? amp : -amp) * 2, x1 + step * (i + 1), y);
+    }
+    ctx.stroke(); ctx.lineCap = 'butt';
+  }
+
+  var COMIC = '"Comic Neue", "Comic Sans MS", "Chalkboard SE", sans-serif';
   var FRANKLIN = '"Libre Franklin", "Segoe UI", Arial, sans-serif';
   var BARLOW = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
   var SOURCE = '"Source Sans 3", "Segoe UI", Arial, sans-serif';
@@ -334,6 +350,27 @@
         fill(ctx, H, WHITE);
         text(ctx, { x: 0, y: 22, size: 38, max: 1190, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
         line(ctx, 0, 60, W, 2, RULE); line(ctx, 0, 60, 48, 2, GOLD);
+      }
+    },
+    // Rounded, friendly lettering with a wavy gold underline.
+    playful: {
+      1: function (ctx, H) {
+        fill(ctx, H, NAVY);
+        var t = text(ctx, { x: 64, y: 104, size: 80, max: 900, family: COMIC, bw: 700, lw: 400, bc: WHITE, lc: WHITE, ls: 0.01 });
+        wave(ctx, 66, t.right - 2, 166, 5, 44, 7, GOLD);
+        ring(ctx, 1076, 96, 30, 7, GOLD);
+        ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(1136, 150, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = WHITE; ctx.fillRect(1010, 160, 26, 6); ctx.fillRect(1020, 150, 6, 26);
+      },
+      2: function (ctx, H) {
+        fill(ctx, H, WHITE);
+        var t = text(ctx, { x: 0, y: 32, size: 58, max: 1190, family: COMIC, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.01 });
+        wave(ctx, 4, t.right - 2, 78, 4, 40, 6, GOLD);
+      },
+      3: function (ctx, H) {
+        fill(ctx, H, WHITE);
+        text(ctx, { x: 0, y: 23, size: 40, max: 1190, family: COMIC, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.01 });
+        wave(ctx, 3, 123, 56, 3, 30, 4.5, GOLD);
       }
     }
   };
@@ -436,6 +473,7 @@
   refresh();
   if (document.fonts && document.fonts.load) {
     Promise.all([
+      document.fonts.load('700 40px "Comic Neue"'), document.fonts.load('400 40px "Comic Neue"'),
       document.fonts.load('700 40px "Libre Franklin"'), document.fonts.load('400 40px "Libre Franklin"'),
       document.fonts.load('800 40px "Barlow Condensed"'), document.fonts.load('500 40px "Barlow Condensed"'),
       document.fonts.load('700 40px "Source Sans 3"'), document.fonts.load('300 40px "Source Sans 3"')
