@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heading Banner Maker | OCTC</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;800&family=Libre+Franklin:wght@400;500;700;800&family=Source+Sans+3:wght@300;700&display=swap">
+<style>
+  /* Layout: the banner being made sits on top at full width; style and level
+     pickers below it are live thumbnails; text and export controls follow. */
+  :root {
+    --bg: #F2F4F9;
+    --surface: #FFFFFF;
+    --fg: #16213A;
+    --muted: #57627F;
+    --line: #D2D9E6;
+    --action: #0F2347;
+    --action-fg: #FFFFFF;
+    --mark: #E9B425;
+    --plate: #E3E8F1;
+    --font: "Libre Franklin", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1525; --surface: #162138; --fg: #E9EDF6; --muted: #9BA7C1;
+      --line: #2C3957; --action: #E9B425; --action-fg: #0F2347; --mark: #E9B425;
+      --plate: #0A101C; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1525; --surface: #162138; --fg: #E9EDF6; --muted: #9BA7C1;
+    --line: #2C3957; --action: #E9B425; --action-fg: #0F2347; --mark: #E9B425;
+    --plate: #0A101C; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.5;
+    padding-inline: 20px;
+    padding-block: 28px 48px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+  header h1 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.15; text-wrap: balance; }
+  header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+
+  .plate {
+    background: var(--plate);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .plate img { display: block; width: 100%; height: auto; max-width: 100%; }
+  .meta { margin: 10px 0 0; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  h2 { margin: 0 0 10px; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+  .picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  .pick {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    font: inherit; color: inherit; text-align: left; cursor: pointer;
+  }
+  .pick img { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+  .pick span { font-size: 14px; font-weight: 500; }
+  .pick[aria-pressed="true"] { border-color: var(--mark); }
+  .pick[aria-pressed="true"] span { font-weight: 800; }
+
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  label, .label { font-size: 14px; font-weight: 500; }
+  .hint { font-size: 13px; color: var(--muted); }
+  input[type="text"], select {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit; color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .check { display: flex; align-items: center; gap: 8px; }
+  .check input { width: 18px; height: 18px; accent-color: var(--action); }
+
+  .export { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  button.primary {
+    padding: 12px 22px;
+    font: inherit; font-weight: 800;
+    color: var(--action-fg);
+    background: var(--action);
+    border: 0; border-radius: 4px; cursor: pointer;
+  }
+  button.quiet {
+    padding: 8px 14px;
+    font: inherit; font-size: 14px; font-weight: 500;
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
+  }
+  #status { margin: 0; font-size: 14px; color: var(--muted); min-width: 0; }
+
+  .alt { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .alt code {
+    font-family: var(--font); font-size: 15px;
+    padding: 6px 10px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 4px;
+    user-select: all; overflow-wrap: anywhere; min-width: 0;
+  }
+
+  :focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+
+  @media (max-width: 620px) {
+    .picks, .fields { grid-template-columns: minmax(0, 1fr); }
+    .plate { padding: 10px; }
+    header h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <h1>Heading Banner Maker</h1>
+    <p>Type the heading, pick a style and a level, and download a PNG for the Blackboard content editor.</p>
+  </header>
+
+  <section aria-label="Preview">
+    <div class="plate"><img id="preview" alt=""></div>
+    <p class="meta" id="meta"></p>
+  </section>
+
+  <section>
+    <h2>Style</h2>
+    <div class="picks">
+      <button type="button" class="pick" id="style-collegiate" aria-pressed="true"><img id="sthumb-collegiate" alt=""><span>Collegiate</span></button>
+      <button type="button" class="pick" id="style-varsity" aria-pressed="false"><img id="sthumb-varsity" alt=""><span>Varsity</span></button>
+      <button type="button" class="pick" id="style-minimal" aria-pressed="false"><img id="sthumb-minimal" alt=""><span>Minimal</span></button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Level</h2>
+    <div class="picks">
+      <button type="button" class="pick" id="pick-1" aria-pressed="true"><img id="thumb-1" alt=""><span>Level 1</span></button>
+      <button type="button" class="pick" id="pick-2" aria-pressed="false"><img id="thumb-2" alt=""><span>Level 2</span></button>
+      <button type="button" class="pick" id="pick-3" aria-pressed="false"><img id="thumb-3" alt=""><span>Level 3</span></button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Text</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="bold-text">Bold words</label>
+        <input type="text" id="bold-text" value="Module 1" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="light-text">Light words</label>
+        <input type="text" id="light-text" value="Overview" autocomplete="off">
+        <span class="hint">Leave empty for an all-bold heading.</span>
+      </div>
+      <div class="field">
+        <label for="size">Image width</label>
+        <select id="size">
+          <option value="1">1200 px (Blackboard minimum)</option>
+          <option value="2" selected>2400 px</option>
+          <option value="4">4800 px (sharpest)</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="label">Letter case</span>
+        <div class="check">
+          <input type="checkbox" id="caps" checked>
+          <label for="caps">ALL CAPS</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="export">
+    <button type="button" class="primary" id="download">Download PNG</button>
+    <p id="status" role="status">You can also right-click the preview and choose Save image as.</p>
+  </section>
+
+  <section class="alt">
+    <span class="label">Alt text for Blackboard:</span>
+    <code id="alt-text"></code>
+    <button type="button" class="quiet" id="copy-alt">Copy</button>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var NAVY = '#0F2347', GOLD = '#E9B425', WHITE = '#FFFFFF', RULE = '#C9D3E3';
+  // Base sizes at 1200 px wide. Level 1 is Blackboard's 5:1 banner; 2 and 3 are shorter strips.
+  var HEIGHTS = { 1: 240, 2: 180, 3: 120 };
+  var W = 1200;
+  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal'];
+
+  var state = { style: 'collegiate', level: 1 };
+  var el = function (id) { return document.getElementById(id); };
+
+  function words() {
+    var b = el('bold-text').value.trim(), l = el('light-text').value.trim();
+    if (el('caps').checked) { b = b.toUpperCase(); l = l.toUpperCase(); }
+    return { bold: b, light: l };
+  }
+
+  // Draws bold + light text on one line, shrinking to fit o.max.
+  // o: x, y, size, max, align, family, bw, lw (weights), bc, lc (colors), ls (letter spacing, em)
+  // Returns the left and right edges of the text.
+  function text(ctx, o) {
+    var t = words(), s = o.size, bw, lw, gap;
+    var font = function (weight) { return weight + ' ' + s + 'px ' + o.family; };
+    for (;;) {
+      if ('letterSpacing' in ctx) ctx.letterSpacing = (s * (o.ls || 0)) + 'px';
+      ctx.font = font(o.bw); bw = t.bold ? ctx.measureText(t.bold).width : 0;
+      ctx.font = font(o.lw); lw = t.light ? ctx.measureText(t.light).width : 0;
+      gap = (t.bold && t.light) ? s * 0.3 : 0;
+      if (bw + gap + lw <= o.max || s <= 14) break;
+      s -= 1;
+    }
+    var total = bw + gap + lw;
+    var x = o.align === 'center' ? o.x - total / 2 : o.x;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.font = font(o.bw); ctx.fillStyle = o.bc; if (t.bold) ctx.fillText(t.bold, x, o.y);
+    ctx.font = font(o.lw); ctx.fillStyle = o.lc; if (t.light) ctx.fillText(t.light, x + bw + gap, o.y);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    return { left: x, right: x + total };
+  }
+
+  function fill(ctx, H, color) { ctx.fillStyle = color; ctx.fillRect(0, 0, W, H); }
+  function line(ctx, x1, y, x2, w, color) { ctx.fillStyle = color; ctx.fillRect(x1, y - w / 2, x2 - x1, w); }
+  function frame(ctx, inset, H, w, color) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.strokeRect(inset, inset, W - 2 * inset, H - 2 * inset); }
+  function diamond(ctx, x, y, r, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+    ctx.closePath(); ctx.fill();
+  }
+  function star(ctx, x, y, R, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    for (var i = 0; i < 10; i++) {
+      var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? R * 0.42 : R;
+      ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
+    }
+    ctx.closePath(); ctx.fill();
+  }
+  function ring(ctx, x, y, r, w, color) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); }
+
+  var FRANKLIN = '"Libre Franklin", "Segoe UI", Arial, sans-serif';
+  var BARLOW = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+  var SOURCE = '"Source Sans 3", "Segoe UI", Arial, sans-serif';
+
+  var STYLES = {
+    // Double gold keyline, diamond ornaments, double rules.
+    collegiate: {
+      1: function (ctx, H) {
+        fill(ctx, H, NAVY); frame(ctx, 14, H, 4, GOLD); frame(ctx, 23, H, 1.5, GOLD);
+        var t = text(ctx, { x: 600, y: 122, size: 56, max: 800, align: 'center', family: FRANKLIN, bw: 700, lw: 400, bc: WHITE, lc: WHITE, ls: 0.08 });
+        line(ctx, t.left - 150, 120, t.left - 46, 2, GOLD); diamond(ctx, t.left - 30, 120, 9, GOLD);
+        diamond(ctx, t.right + 30, 120, 9, GOLD); line(ctx, t.right + 46, 120, t.right + 150, 2, GOLD);
+      },
+      2: function (ctx, H) {
+        fill(ctx, H, WHITE);
+        text(ctx, { x: 56, y: 78, size: 44, max: 1080, family: FRANKLIN, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.08 });
+        line(ctx, 56, 128, 1144, 5, NAVY); line(ctx, 56, 139, 1144, 2, GOLD);
+      },
+      3: function (ctx, H) {
+        fill(ctx, H, WHITE); diamond(ctx, 68, 60, 10, GOLD);
+        var t = text(ctx, { x: 96, y: 62, size: 30, max: 1000, family: FRANKLIN, bw: 700, lw: 400, bc: NAVY, lc: NAVY, ls: 0.08 });
+        if (t.right + 50 < 1144) line(ctx, t.right + 24, 60, 1144, 1.5, NAVY);
+      }
+    },
+    // Letter-sweater stripes, star seal, condensed athletic lettering.
+    varsity: {
+      1: function (ctx, H) {
+        fill(ctx, H, NAVY);
+        line(ctx, 0, 18, W, 10, GOLD); line(ctx, 0, 32, W, 3, WHITE);
+        line(ctx, 0, H - 18, W, 10, GOLD); line(ctx, 0, H - 32, W, 3, WHITE);
+        text(ctx, { x: 64, y: 124, size: 96, max: 880, family: BARLOW, bw: 800, lw: 500, bc: WHITE, lc: GOLD, ls: 0.03 });
+        ring(ctx, 1070, 120, 62, 5, GOLD); ring(ctx, 1070, 120, 52, 1.5, GOLD); star(ctx, 1070, 122, 34, GOLD);
+      },
+      2: function (ctx, H) {
+        fill(ctx, H, WHITE); star(ctx, 82, 78, 26, GOLD);
+        text(ctx, { x: 124, y: 80, size: 70, max: 1010, family: BARLOW, bw: 800, lw: 500, bc: NAVY, lc: NAVY, ls: 0.03 });
+        line(ctx, 56, 132, 1144, 8, NAVY); line(ctx, 56, 144, 1144, 3, GOLD);
+      },
+      3: function (ctx, H) {
+        fill(ctx, H, WHITE);
+        ctx.fillStyle = NAVY; ctx.fillRect(56, 34, 6, 52); ctx.fillStyle = GOLD; ctx.fillRect(66, 34, 3, 52);
+        text(ctx, { x: 88, y: 62, size: 48, max: 1050, family: BARLOW, bw: 800, lw: 500, bc: NAVY, lc: NAVY, ls: 0.03 });
+      }
+    },
+    // Type and one short gold bar.
+    minimal: {
+      1: function (ctx, H) {
+        fill(ctx, H, NAVY);
+        text(ctx, { x: 64, y: 108, size: 72, max: 1070, family: SOURCE, bw: 700, lw: 300, bc: WHITE, lc: WHITE, ls: 0.02 });
+        ctx.fillStyle = GOLD; ctx.fillRect(64, 164, 96, 6);
+      },
+      2: function (ctx, H) {
+        fill(ctx, H, WHITE);
+        text(ctx, { x: 56, y: 76, size: 54, max: 1080, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
+        ctx.fillStyle = GOLD; ctx.fillRect(56, 124, 96, 6);
+      },
+      3: function (ctx, H) {
+        fill(ctx, H, WHITE);
+        text(ctx, { x: 56, y: 54, size: 38, max: 1080, family: SOURCE, bw: 700, lw: 300, bc: NAVY, lc: NAVY, ls: 0.02 });
+        line(ctx, 56, 92, 1144, 2, RULE); line(ctx, 56, 92, 104, 2, GOLD);
+      }
+    }
+  };
+
+  function render(style, level, scale) {
+    var H = HEIGHTS[level];
+    var c = document.createElement('canvas');
+    c.width = Math.round(W * scale); c.height = Math.round(H * scale);
+    var ctx = c.getContext('2d');
+    ctx.scale(scale, scale);
+    STYLES[style][level](ctx, H);
+    return c;
+  }
+
+  function altText() {
+    return (el('bold-text').value.trim() + ' ' + el('light-text').value.trim()).trim();
+  }
+
+  function fileName() {
+    var slug = altText().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'heading';
+    return slug + '-level-' + state.level + '.png';
+  }
+
+  function refresh() {
+    var scale = Number(el('size').value);
+    var c = render(state.style, state.level, scale);
+    el('preview').src = c.toDataURL('image/png');
+    el('preview').alt = 'Preview: ' + (altText() || 'empty heading');
+    el('meta').textContent = 'Level ' + state.level + ' · ' + c.width + ' × ' + c.height + ' px · ' + fileName();
+    STYLE_NAMES.forEach(function (name) {
+      el('sthumb-' + name).src = render(name, state.level, 0.5).toDataURL('image/png');
+      el('style-' + name).setAttribute('aria-pressed', String(name === state.style));
+    });
+    [1, 2, 3].forEach(function (n) {
+      el('thumb-' + n).src = render(state.style, n, 0.5).toDataURL('image/png');
+      el('pick-' + n).setAttribute('aria-pressed', String(n === state.level));
+    });
+    el('alt-text').textContent = altText() || '(add heading text)';
+  }
+
+  var timer;
+  function refreshSoon() { clearTimeout(timer); timer = setTimeout(refresh, 120); }
+
+  ['bold-text', 'light-text'].forEach(function (id) { el(id).addEventListener('input', refreshSoon); });
+  ['size', 'caps'].forEach(function (id) { el(id).addEventListener('change', refresh); });
+  STYLE_NAMES.forEach(function (name) {
+    el('style-' + name).addEventListener('click', function () { state.style = name; refresh(); });
+  });
+  [1, 2, 3].forEach(function (n) {
+    el('pick-' + n).addEventListener('click', function () { state.level = n; refresh(); });
+  });
+
+  // Saving: inside Claude the page asks the viewer to save; on an ordinary website a download link works.
+  var saver = null;
+  if (window.claude && window.claude.use) {
+    window.claude.use('downloads').then(function (ns) { saver = ns; });
+  }
+
+  var RIGHT_CLICK = 'Right-click the preview and choose Save image as.';
+
+  el('download').addEventListener('click', function () {
+    var status = el('status');
+    var name = fileName();
+    render(state.style, state.level, Number(el('size').value)).toBlob(function (blob) {
+      if (!blob) { status.textContent = 'The image could not be created. ' + RIGHT_CLICK; return; }
+      if (saver) {
+        saver.save({ filename: name, data: blob }).then(function () {
+          status.textContent = 'Saved ' + name + '.';
+        }, function (err) {
+          var code = err && err.code;
+          if (code === 'declined') status.textContent = 'Download cancelled.';
+          else if (code === 'rate_limited') status.textContent = 'A save prompt is already open. Answer it, then try again.';
+          else status.textContent = 'Download is not available here. ' + RIGHT_CLICK;
+        });
+        return;
+      }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      status.textContent = 'If nothing downloaded, right-click the preview and choose Save image as.';
+    }, 'image/png');
+  });
+
+  el('copy-alt').addEventListener('click', function () {
+    var btn = el('copy-alt');
+    var value = altText();
+    function selectIt() {
+      var range = document.createRange(); range.selectNodeContents(el('alt-text'));
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      btn.textContent = 'Selected, press Ctrl+C';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(function () { btn.textContent = 'Copied'; }, selectIt);
+    } else { selectIt(); }
+    setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+  });
+
+  refresh();
+  if (document.fonts && document.fonts.load) {
+    Promise.all([
+      document.fonts.load('700 40px "Libre Franklin"'), document.fonts.load('400 40px "Libre Franklin"'),
+      document.fonts.load('800 40px "Barlow Condensed"'), document.fonts.load('500 40px "Barlow Condensed"'),
+      document.fonts.load('700 40px "Source Sans 3"'), document.fonts.load('300 40px "Source Sans 3"')
+    ]).then(refresh, refresh);
+  }
+})();
+</script>
+
+</body>
+</html>
