@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course Banner Maker | OCTC Bb Tools</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;800&family=Libre+Franklin:wght@400;500;700;800&family=Source+Sans+3:wght@300;400;700&display=swap">
+<style>
+  /* Layout: the banner being made sits on top at full width; style and level
+     pickers below it are live thumbnails; text and export controls follow. */
+  :root {
+    --bg: #F2F4F9;
+    --surface: #FFFFFF;
+    --fg: #16213A;
+    --muted: #57627F;
+    --line: #D2D9E6;
+    --action: #0F2347;
+    --action-fg: #FFFFFF;
+    --mark: #E9B425;
+    --plate: #E3E8F1;
+    --font: "Libre Franklin", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1525; --surface: #162138; --fg: #E9EDF6; --muted: #9BA7C1;
+      --line: #2C3957; --action: #E9B425; --action-fg: #0F2347; --mark: #E9B425;
+      --plate: #0A101C; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1525; --surface: #162138; --fg: #E9EDF6; --muted: #9BA7C1;
+    --line: #2C3957; --action: #E9B425; --action-fg: #0F2347; --mark: #E9B425;
+    --plate: #0A101C; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.5;
+    padding-inline: 20px;
+    padding-block: 28px 48px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+  header h1 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.15; text-wrap: balance; }
+  header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+
+  .plate {
+    background: var(--plate);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .plate img { display: block; width: 100%; height: auto; max-width: 100%; }
+  .meta { margin: 10px 0 0; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  h2 { margin: 0 0 10px; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+  .picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  .pick {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    font: inherit; color: inherit; text-align: left; cursor: pointer;
+  }
+  .pick img { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+  .pick span { font-size: 14px; font-weight: 500; }
+  .pick[aria-pressed="true"] { border-color: var(--mark); }
+  .pick[aria-pressed="true"] span { font-weight: 800; }
+
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  label, .label { font-size: 14px; font-weight: 500; }
+  .hint { font-size: 13px; color: var(--muted); }
+  input[type="text"], select {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit; color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .check { display: flex; align-items: center; gap: 8px; }
+  .check input { width: 18px; height: 18px; accent-color: var(--action); }
+
+  .export { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  button.primary {
+    padding: 12px 22px;
+    font: inherit; font-weight: 800;
+    color: var(--action-fg);
+    background: var(--action);
+    border: 0; border-radius: 4px; cursor: pointer;
+  }
+  button.quiet {
+    padding: 8px 14px;
+    font: inherit; font-size: 14px; font-weight: 500;
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
+  }
+  #status { margin: 0; font-size: 14px; color: var(--muted); min-width: 0; }
+
+  .alt { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .alt code {
+    font-family: var(--font); font-size: 15px;
+    padding: 6px 10px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 4px;
+    user-select: all; overflow-wrap: anywhere; min-width: 0;
+  }
+
+  :focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+
+  @media (max-width: 620px) {
+    .picks, .fields { grid-template-columns: minmax(0, 1fr); }
+    .plate { padding: 10px; }
+    header h1 { font-size: 24px; }
+  }
+  .back { margin: 0 0 6px; font-size: 14px; font-weight: 500; }
+  .back a { color: var(--fg); }
+  .picks.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .tool { display: flex; flex-direction: column; gap: 6px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--mark); border-radius: 6px; color: var(--fg); text-decoration: none; }
+  .tool strong { font-size: 20px; font-weight: 800; }
+  .tool span { color: var(--muted); }
+  .tool em { font-style: normal; font-weight: 700; text-decoration: underline; }
+  footer { font-size: 14px; color: var(--muted); padding-top: 16px; border-top: 1px solid var(--line); }
+  @media (max-width: 620px) { .picks.two, .tools { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <p class="back"><a href="../">&larr; All Bb Tools</a></p>
+    <h1>Course Banner Maker</h1>
+    <p>Type a title, add a subtitle if you want one, pick a color and a style, and download a PNG for your Blackboard course banner.</p>
+  </header>
+
+  <section aria-label="Preview">
+    <div class="plate"><img id="preview" alt=""></div>
+    <p class="meta" id="meta"></p>
+  </section>
+
+  <section>
+    <h2>Color</h2>
+    <div class="picks two">
+      <button type="button" class="pick" id="color-navy" aria-pressed="true"><img id="cthumb-navy" alt=""><span>Navy with gold trim</span></button>
+      <button type="button" class="pick" id="color-gold" aria-pressed="false"><img id="cthumb-gold" alt=""><span>Gold with navy trim</span></button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Style</h2>
+    <div class="picks">
+      <button type="button" class="pick" id="style-collegiate" aria-pressed="true"><img id="sthumb-collegiate" alt=""><span>Collegiate</span></button>
+      <button type="button" class="pick" id="style-varsity" aria-pressed="false"><img id="sthumb-varsity" alt=""><span>Varsity</span></button>
+      <button type="button" class="pick" id="style-minimal" aria-pressed="false"><img id="sthumb-minimal" alt=""><span>Minimal</span></button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Text</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="title-text">Title</label>
+        <input type="text" id="title-text" value="ENG 101" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="sub-text">Subtitle (optional)</label>
+        <input type="text" id="sub-text" value="Fall 2026" autocomplete="off">
+        <span class="hint">A term, a course name, or a section. Leave empty for a title-only banner.</span>
+      </div>
+      <div class="field">
+        <label for="size">Image width</label>
+        <select id="size">
+          <option value="1">1200 &times; 240 px (Blackboard minimum)</option>
+          <option value="2" selected>2400 &times; 480 px</option>
+          <option value="4">4800 &times; 960 px (sharpest)</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="label">Letter case</span>
+        <div class="check">
+          <input type="checkbox" id="caps" checked>
+          <label for="caps">ALL CAPS</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="export">
+    <button type="button" class="primary" id="download">Download PNG</button>
+    <p id="status" role="status">You can also right-click the preview and choose Save image as.</p>
+  </section>
+
+  <section class="alt">
+    <span class="label">Alt text for Blackboard:</span>
+    <code id="alt-text"></code>
+    <button type="button" class="quiet" id="copy-alt">Copy</button>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var NAVY = '#0F2347', GOLD = '#E9B425', WHITE = '#FFFFFF';
+  var W = 1200, H = 240; // Blackboard's 5:1 course banner
+  var STYLE_NAMES = ['collegiate', 'varsity', 'minimal'];
+  // bg: field, ink: title, trim: rules and ornaments, thin: the fine second stripe, sub: subtitle
+  var COLORS = {
+    navy: { bg: NAVY, ink: WHITE, trim: GOLD, thin: WHITE, sub: GOLD },
+    gold: { bg: GOLD, ink: NAVY, trim: NAVY, thin: WHITE, sub: NAVY }
+  };
+
+  var state = { style: 'collegiate', color: 'navy' };
+  var el = function (id) { return document.getElementById(id); };
+
+  function words() {
+    var t = el('title-text').value.trim(), s = el('sub-text').value.trim();
+    if (el('caps').checked) { t = t.toUpperCase(); s = s.toUpperCase(); }
+    return { title: t, sub: s };
+  }
+
+  // Draws one centered line, shrinking to fit o.max. Returns its left and right edges.
+  // o: y, size, max, family, weight, color, ls (letter spacing, em)
+  function centered(ctx, str, o) {
+    var s = o.size, w;
+    for (;;) {
+      if ('letterSpacing' in ctx) ctx.letterSpacing = (s * (o.ls || 0)) + 'px';
+      ctx.font = o.weight + ' ' + s + 'px ' + o.family;
+      w = ctx.measureText(str).width;
+      if (w <= o.max || s <= 14) break;
+      s -= 1;
+    }
+    // Letter spacing adds a trailing gap after the last letter; shift so the glyphs sit centered.
+    var trail = ('letterSpacing' in ctx) ? s * (o.ls || 0) : 0;
+    var left = W / 2 - (w - trail) / 2;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillStyle = o.color;
+    ctx.fillText(str, left, o.y);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    return { left: left, right: left + w - trail };
+  }
+
+  function line(ctx, x1, y, x2, w, color) { ctx.fillStyle = color; ctx.fillRect(x1, y - w / 2, x2 - x1, w); }
+  function diamond(ctx, x, y, r, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+    ctx.closePath(); ctx.fill();
+  }
+  function star(ctx, x, y, R, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    for (var i = 0; i < 10; i++) {
+      var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? R * 0.42 : R;
+      ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
+    }
+    ctx.closePath(); ctx.fill();
+  }
+
+  var FRANKLIN = '"Libre Franklin", "Segoe UI", Arial, sans-serif';
+  var BARLOW = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+  var SOURCE = '"Source Sans 3", "Segoe UI", Arial, sans-serif';
+
+  // Text stays in the middle 820 px; rules run the full width, so cropped sides still look finished.
+  var STYLES = {
+    // Double rules top and bottom, diamonds beside the title.
+    collegiate: function (ctx, c, t) {
+      line(ctx, 0, 22, W, 4, c.trim); line(ctx, 0, 31, W, 1.5, c.trim);
+      line(ctx, 0, H - 22, W, 4, c.trim); line(ctx, 0, H - 31, W, 1.5, c.trim);
+      var y = t.sub ? 102 : 122;
+      var m = centered(ctx, t.title, { y: y, size: 78, max: 760, family: FRANKLIN, weight: 700, color: c.ink, ls: 0.08 });
+      line(ctx, m.left - 150, y - 2, m.left - 48, 2, c.trim); diamond(ctx, m.left - 32, y - 2, 9, c.trim);
+      diamond(ctx, m.right + 32, y - 2, 9, c.trim); line(ctx, m.right + 48, y - 2, m.right + 150, 2, c.trim);
+      if (t.sub) centered(ctx, t.sub, { y: 168, size: 26, max: 760, family: FRANKLIN, weight: 500, color: c.sub, ls: 0.18 });
+    },
+    // Letter-sweater stripes, stars beside the subtitle.
+    varsity: function (ctx, c, t) {
+      line(ctx, 0, 18, W, 10, c.trim); line(ctx, 0, 32, W, 3, c.thin);
+      line(ctx, 0, H - 18, W, 10, c.trim); line(ctx, 0, H - 32, W, 3, c.thin);
+      centered(ctx, t.title, { y: 106, size: 108, max: 820, family: BARLOW, weight: 800, color: c.ink, ls: 0.03 });
+      if (t.sub) {
+        var s = centered(ctx, t.sub, { y: 178, size: 34, max: 700, family: BARLOW, weight: 500, color: c.sub, ls: 0.14 });
+        star(ctx, s.left - 30, 177, 11, c.trim); star(ctx, s.right + 30, 177, 11, c.trim);
+      } else {
+        star(ctx, 566, 180, 11, c.trim); star(ctx, 600, 180, 11, c.trim); star(ctx, 634, 180, 11, c.trim);
+      }
+    },
+    // Title, one short bar, subtitle.
+    minimal: function (ctx, c, t) {
+      var y = t.sub ? 94 : 110;
+      centered(ctx, t.title, { y: y, size: 88, max: 820, family: SOURCE, weight: 700, color: c.ink, ls: 0.02 });
+      ctx.fillStyle = c.trim; ctx.fillRect(W / 2 - 48, y + 56, 96, 6);
+      if (t.sub) centered(ctx, t.sub, { y: 192, size: 30, max: 760, family: SOURCE, weight: 400, color: c.ink, ls: 0.06 });
+    }
+  };
+
+  function render(style, color, scale) {
+    var cv = document.createElement('canvas');
+    cv.width = Math.round(W * scale); cv.height = Math.round(H * scale);
+    var ctx = cv.getContext('2d');
+    ctx.scale(scale, scale);
+    var c = COLORS[color];
+    ctx.fillStyle = c.bg; ctx.fillRect(0, 0, W, H);
+    STYLES[style](ctx, c, words());
+    return cv;
+  }
+
+  function altText() {
+    var t = el('title-text').value.trim(), s = el('sub-text').value.trim();
+    return t && s ? t + ', ' + s : (t || s);
+  }
+
+  function fileName() {
+    var slug = altText().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'course';
+    return slug + '-course-banner.png';
+  }
+
+  function refresh() {
+    var cv = render(state.style, state.color, Number(el('size').value));
+    el('preview').src = cv.toDataURL('image/png');
+    el('preview').alt = 'Preview: ' + (altText() || 'empty banner');
+    el('meta').textContent = cv.width + ' \u00D7 ' + cv.height + ' px \u00B7 ' + fileName();
+    STYLE_NAMES.forEach(function (name) {
+      el('sthumb-' + name).src = render(name, state.color, 0.5).toDataURL('image/png');
+      el('style-' + name).setAttribute('aria-pressed', String(name === state.style));
+    });
+    ['navy', 'gold'].forEach(function (name) {
+      el('cthumb-' + name).src = render(state.style, name, 0.5).toDataURL('image/png');
+      el('color-' + name).setAttribute('aria-pressed', String(name === state.color));
+    });
+    el('alt-text').textContent = altText() || '(add a title)';
+  }
+
+  var timer;
+  function refreshSoon() { clearTimeout(timer); timer = setTimeout(refresh, 120); }
+
+  ['title-text', 'sub-text'].forEach(function (id) { el(id).addEventListener('input', refreshSoon); });
+  ['size', 'caps'].forEach(function (id) { el(id).addEventListener('change', refresh); });
+  STYLE_NAMES.forEach(function (name) {
+    el('style-' + name).addEventListener('click', function () { state.style = name; refresh(); });
+  });
+  ['navy', 'gold'].forEach(function (name) {
+    el('color-' + name).addEventListener('click', function () { state.color = name; refresh(); });
+  });
+
+  el('download').addEventListener('click', function () {
+    var status = el('status');
+    var name = fileName();
+    render(state.style, state.color, Number(el('size').value)).toBlob(function (blob) {
+      if (!blob) { status.textContent = 'The image could not be created. Right-click the preview and choose Save image as.'; return; }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      status.textContent = 'Downloaded ' + name + '. If nothing downloaded, right-click the preview and choose Save image as.';
+    }, 'image/png');
+  });
+
+  el('copy-alt').addEventListener('click', function () {
+    var btn = el('copy-alt');
+    function selectIt() {
+      var range = document.createRange(); range.selectNodeContents(el('alt-text'));
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      btn.textContent = 'Selected, press Ctrl+C';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(altText()).then(function () { btn.textContent = 'Copied'; }, selectIt);
+    } else { selectIt(); }
+    setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+  });
+
+  refresh();
+  if (document.fonts && document.fonts.load) {
+    Promise.all([
+      document.fonts.load('700 40px "Libre Franklin"'), document.fonts.load('500 40px "Libre Franklin"'),
+      document.fonts.load('800 40px "Barlow Condensed"'), document.fonts.load('500 40px "Barlow Condensed"'),
+      document.fonts.load('700 40px "Source Sans 3"'), document.fonts.load('400 40px "Source Sans 3"')
+    ]).then(refresh, refresh);
+  }
+})();
+</script>
+
+</body>
+</html>
